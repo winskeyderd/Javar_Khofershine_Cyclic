@@ -1,0 +1,87 @@
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+const int N = 7; // nodes: a-g
+
+int adj[N][N] = { // directed from whiteboard ni sir
+    {0,0,1,0,0,0,0}, // a → c
+    {0,0,0,0,0,0,0}, // b
+    {0,1,0,0,1,1,1}, // c → b, e, f, g
+    {1,0,0,0,0,0,0}, // d → a
+    {1,0,0,0,0,0,0}, // e → a
+    {0,1,0,0,0,0,0}, // f → b
+    {0,0,0,0,0,0,0}  // g
+};
+
+int inDegree[N];       
+vector<char> topoOrder;
+
+void computeInDegree() {
+    fill(inDegree, inDegree + N, 0);
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            if (adj[i][j]) inDegree[j]++;
+}
+
+void printInDegrees() {
+    cout << "\nVertex | In-Degree\n";
+    cout << "------------------\n";
+    for (int i = 0; i < N; ++i) {
+        cout << "   " << (char)('a' + i) << "    |     " << inDegree[i] << "\n";
+    }
+    cout << "------------------\n";
+}
+
+bool detectCycleBFS() {
+    computeInDegree();
+    printInDegrees();
+
+    queue<int> q;
+    topoOrder.clear();
+
+    // Enqueue all vertices in alphabetical order
+    for (int i = 0; i < N; ++i) {
+        if (inDegree[i] == 0)
+            q.push(i);
+    }
+
+    while (!q.empty()) {
+        int curr = q.front(); q.pop();
+        topoOrder.push_back(curr);
+        cout << "\n→ Removing vertex " << (char)('a' + curr) << " from queue\n";
+
+        for (int j = 0; j < N; ++j) {
+            if (adj[curr][j]) {
+                inDegree[j]--;
+                cout << "   - Decreasing in-degree of " << (char)('a' + j)
+                     << " → now " << inDegree[j] << "\n";
+
+                if (inDegree[j] == 0)
+                    q.push(j);
+            }
+        }
+    }
+
+    // it see if cycle exists
+    return (topoOrder.size() != N);
+}
+
+int main() {
+    cout << "=== Cycle Detection Using BFS ===\n";
+
+    bool hasCycle = detectCycleBFS();
+
+    cout << "\n== Result ==\n";
+    if (hasCycle) {
+        cout << "❌ Cycle detected in the graph.\n";
+    } else {
+        cout << "✅ No cycle found. Topological order:\n";
+        for (char ch : topoOrder) cout << (char)('a' + ch) << " ";
+        cout << endl;
+    }
+
+    return 0;
+}
