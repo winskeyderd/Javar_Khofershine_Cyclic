@@ -1,0 +1,130 @@
+#include <iostream>
+#include <vector>
+#include <set>
+#include <stack>
+#include <iomanip>
+#include <algorithm>
+using namespace std;
+
+const int N = 7; // vertices: a-g
+
+// Adjacency matrix - directed from the whiteboard ni sir
+int adj[N][N] = {
+    {0,0,1,0,0,0,0}, // a → c
+    {0,0,0,0,0,0,0}, // b
+    {0,1,0,0,1,1,1}, // c → b, e, f, g
+    {1,0,0,0,0,0,0}, // d → a
+    {1,0,0,0,0,0,0}, // e → a
+    {0,1,0,0,0,0,0}, // f → b
+    {0,0,0,0,0,0,0}  // g
+};
+
+int status[N];              // -1 = unvisited, 0 = visiting, 1 = visited
+int parent[N];              // parent
+vector<int> traversalOrder; 
+set<char> cycleNodes;       
+bool foundCycle = false;
+int cycleStart = -1, cycleEnd = -1;
+
+void printStatusTable() {
+    cout << "\n+---------+--------+--------+\n";
+    cout << "| Vertex  | Status | Parent |\n";
+    cout << "+---------+--------+--------+\n";
+    for (int i : traversalOrder) {
+        cout << "|   " << (char)('a' + i) << "     |   ";
+        if (status[i] == -1) cout << "-1     ";
+        else if (status[i] == 0) cout << " 0     ";
+        else cout << "+1     ";
+
+        cout << "|   ";
+        if (parent[i] == -1) cout << "-";
+        else cout << (char)('a' + parent[i]);
+        cout << "     |\n";
+    }
+    cout << "+---------+--------+--------+\n";
+}
+
+bool dfs(int node) {
+    status[node] = 0;
+    traversalOrder.push_back(node);
+    cout << "\n>> Visiting node " << (char)('a' + node) << "...\n";
+    printStatusTable();
+
+    // Alphabetically sort nearest neighbors
+    vector<int> neighbors;
+    for (int j = 0; j < N; ++j)
+        if (adj[node][j]) neighbors.push_back(j);
+    sort(neighbors.begin(), neighbors.end());
+
+    for (int neighbor : neighbors) {
+        cout << "   - direct " << (char)('a' + node) << " → " << (char)('a' + neighbor) << "\n";
+
+        if (status[neighbor] == -1) {
+            cout << "     → " << (char)('a' + neighbor) << " is unvisited. Continue DFS.\n";
+            parent[neighbor] = node;
+            if (dfs(neighbor)) return true;
+        }
+        else if (status[neighbor] == 0) {
+            
+            cout << "     → loop FOUND! " << (char)('a' + neighbor)
+                 << " is in recursion stack → cycle exists!\n";
+            cycleStart = neighbor;
+            cycleEnd = node;
+            foundCycle = true;
+            return true;
+        }
+        else {
+            cout << "     → Already visited.\n";
+        }
+    }
+
+    status[node] = 1;
+    cout << "<< Finished node " << (char)('a' + node) << "\n";
+    printStatusTable();
+    return false;
+}
+
+void extractCycle() {
+    cycleNodes.clear();
+    int current = cycleEnd;
+    cycleNodes.insert('a' + current);
+    while (current != cycleStart) {
+        current = parent[current];
+        cycleNodes.insert('a' + current);
+    }
+}
+
+int main() {
+    fill(status, status + N, -1);
+    fill(parent, parent + N, -1);
+    traversalOrder.clear();
+
+    int root = 3; // 'd'
+
+    cout << "=== DFS Cycle Detection (Start from root 'd') ===\n";
+
+    cout << "\n=== Starting DFS from root: " << (char)('a' + root) << " ===\n";
+    dfs(root);
+
+    // unvisited 
+    for (int i = 0; i < N; ++i) {
+        if (i != root && status[i] == -1) {
+            cout << "\n=== Continuing DFS from node: " << (char)('a' + i) << " ===\n";
+            dfs(i);
+        }
+    }
+
+    if (foundCycle) {
+        extractCycle(); 
+        vector<char> sorted(cycleNodes.begin(), cycleNodes.end());
+        sort(sorted.begin(), sorted.end());
+        cout << "\n== CYCLE DETECTED ==\n";
+        cout << "Cycle involves the following vertices: ";
+        for (char ch : sorted) cout << ch << " ";
+        cout << endl;
+    } else {
+        cout << "\n== No cycle found in the graph. ==\n";
+    }
+
+    return 0;
+}
