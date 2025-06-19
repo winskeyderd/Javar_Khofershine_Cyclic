@@ -76,9 +76,9 @@ int main() {
 
     cout << "\n== Result ==\n";
     if (hasCycle) {
-        cout << "❌ Cycle detected in the graph.\n";
+        cout << "Cycle detected in the graph.\n";
     } else {
-        cout << "✅ No cycle found. Topological order:\n";
+        cout << "No cycle found. Topological order:\n";
         for (char ch : topoOrder) cout << (char)('a' + ch) << " ";
         cout << endl;
     }
